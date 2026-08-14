@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zony's App - Fuente de Vida</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #121212; color: white; padding: 15px; margin: 0; }
+        .container { max-width: 500px; margin: auto; }
+        .card { background: #1e1e1e; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #333; }
+        select, input { width: 100%; padding: 12px; margin-top: 5px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #444; background: #2a2a2a; color: white; box-sizing: border-box; font-size: 15px; }
+        
+        button { background-color: #7ca832; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; font-size: 16px; transition: 0.2s; }
+        button:active { transform: scale(0.98); }
+        button.danger { background-color: #b73a3a; margin-top: 10px; }
+        
+        .flex { display: flex; justify-content: space-between; font-weight: bold; margin-top: 10px; border-top: 1px solid #444; padding-top: 10px; }
+        .nota-platillo { font-size: 13px; color: #aaa; font-style: italic; margin: -12px 0 10px 15px; }
+        .mesero-tag { font-size: 11px; background-color: #333; color: #bbb; padding: 2px 6px; border-radius: 3px; font-weight: normal; margin-left: 5px; }
+        .btn-cancelar { background-color: #b73a3a; color: white; border: none; border-radius: 4px; padding: 4px 10px; font-size: 12px; cursor: pointer; width: auto; font-weight: bold; margin-left: 10px; }
+        .fila-pedido { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+
+        /* Cuadrícula de Mesas */
+        .mesas-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
+        .mesa-btn { padding: 12px 5px; border-radius: 6px; border: 1px solid #333; text-align: center; cursor: pointer; font-weight: bold; font-size: 13px; background-color: #2e5a1c; color: #a3e685; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 3px; min-height: 60px; box-sizing: border-box; }
+        .mesa-btn.ocupada { background-color: #6e2121; color: #fca5a5; border-color: #b73a3a; }
+        .mesa-btn.seleccionada { border: 2px solid #ffffff; box-shadow: 0 0 8px #ffffff; }
+        .mesa-txt-total { font-size: 11px; font-weight: normal; opacity: 0.9; }
+
+        /* Filtros de Categorías */
+        .categorias-flex { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 5px; }
+        .cat-btn { background-color: #2a2a2a; color: #ccc; border: 1px solid #444; padding: 8px 12px; border-radius: 20px; font-size: 13px; cursor: pointer; width: auto; font-weight: normal; white-space: nowrap; }
+        .cat-btn.activa { background-color: #0066cc; color: white; border-color: #0088ff; font-weight: bold; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Zony's App 🚀 <span style="font-size: 14px; color: #7ca832; font-weight: normal;">Fuente de Vida</span></h2>
+
+    <div class="card">
+        <label>Mesero Atendiendo:</label>
+        <div style="display: flex; gap: 10px; margin-top: 5px;">
+            <select id="select-mesero" style="margin: 0; flex-grow: 1;"></select>
+            <button onclick="agregarNuevoMesero()" style="background-color: #0066cc; width: auto; padding: 10px 15px; margin: 0; white-space: nowrap;">+ Mesero</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label style="font-weight: bold;">Mapa de Mesas:</label>
+            <button onclick="agregarNuevaMesa()" style="background-color: #555; width: auto; padding: 5px 12px; font-size: 13px;">+ Mesa</button>
+        </div>
+        <div class="mesas-grid" id="contenedor-mesas">
+            </div>
+        <h3 style="margin-top: 15px; margin-bottom: 0;">Panel: <span id="txt-mesa-activa" style="color: #0088ff;">Ninguna</span></h3>
+    </div>
+
+    <div class="card">
+        <h3>Agregar Platillo</h3>
+        
+        <div class="categorias-flex">
+            <button class="cat-btn activa" onclick="filtrarMenu('todas', this)">Todas</button>
+            <button class="cat-btn" onclick="filtrarMenu('comida', this)">Comida</button>
+            <button class="cat-btn" onclick="filtrarMenu('postres', this)">Postres/Botanas</button>
+            <button class="cat-btn" onclick="filtrarMenu('crepas', this)">Crepas</button>
+            <button class="cat-btn" onclick="filtrarMenu('bebidas', this)">Bebidas</button>
+        </div>
+
+        <label>Producto:</label>
+        <select id="producto">
+            <option value="60" data-cat="comida">Hamburguesa - $60</option>
+            <option value="24" data-cat="comida">Tacos - $24</option>
+            <option value="20" data-cat="comida">Hotdog 1pz - $20</option>
+            <option value="50" data-cat="comida">Hotdog 3pz - $50</option>
+            <option value="70" data-cat="comida">Burros - $70</option>
+            <option value="30" data-cat="comida">Quesadillas - $30</option>
+            <option value="30" data-cat="comida">Sincronizada 1pz - $30</option>
+            <option value="50" data-cat="comida">Sincronizada 2pz - $50</option>
+            <option value="50" data-cat="comida">Sincronizada Especial - $50</option>
+            <option value="30" data-cat="comida">Pambazos - $30</option>
+            <option value="35" data-cat="comida">Enchiladas - $35</option>
+            <option value="60" data-cat="postres">Alitas - $60</option>
+            <option value="30" data-cat="postres">Papas Fritas - $30</option>
+            <option value="35" data-cat="postres">Papas a la Francesa - $35</option>
+            <option value="30" data-cat="postres">Fresas con Cream - $30</option>
+            <option value="35" data-cat="postres">Plátanos Fritos / Capeados - $35</option>
+            <option value="25" data-cat="postres">Pay de Limón - $25</option>
+            <option value="30" data-cat="postres">Chicharrones Preparados Cuadro - $30</option>
+            <option value="20" data-cat="postres">Lagrimitas - $20</option>
+            <option value="25" data-cat="bebidas">Coca-Cola / Boing - $25</option>
+            <option value="25" data-cat="bebidas">Frape chico - $25</option>
+            <option value="30" data-cat="bebidas">Frape mediano - $30</option>
+            <option value="40" data-cat="bebidas">Frape grande - $40</option>
+            <option value="50" data-cat="crepas">Fresa Tentación - $50</option>
+            <option value="50" data-cat="crepas">Banana Dulce - $50</option>
+            <option value="50" data-cat="crepas">Durazno Cream - $50</option>
+            <option value="50" data-cat="crepas">Queso con Zarzamora - $50</option>
+            <option value="50" data-cat="crepas">Fresa Crunch - $50</option>
+            <option value="50" data-cat="crepas">Banana Crunch - $50</option>
+            <option value="50" data-cat="crepas">Frutos Rojos - $50</option>
+            <option value="50" data-cat="crepas">Banana Choco - $50</option>
+            <option value="50" data-cat="crepas">Fresa Suprema - $50</option>
+            <option value="50" data-cat="crepas">Durazno Deluxe - $50</option>
+            
+        </select>
+        
+        <label>Cantidad:</label>
+        <select id="cantidad" style="margin-bottom: 10px;">
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+            <option value="13">13</option>
+            <option value="14">14</option>
+            <option value="15">15</option>
+        </select>
+
+        <label>Notas / Descripción (Ej: sin jitomate, con todo):</label>
+        <input type="text" id="notas" placeholder="Instrucciones especiales...">
+        
+        <button onclick="enviarPedido()">+ Agregar Pedido</button>
+    </div>
+
+    <div class="card">
+        <h3>Lista de Pedidos</h3>
+        <div id="lista-pedidos"></div>
+        <div class="flex">
+            <span>TOTAL MESA:</span>
+            <span id="txt-total">$0.00</span>
+        </div>
+    </div>
+
+    <button class="danger" onclick="finalizarMesa()">Finalizar Pedido y Liberar Mesa</button>
+</div>
+
+<script>
+    let datosServidor = { mesas: [], meseros: [] };
+    let mesaSeleccionadaId = 1; // Arranca por defecto visualizando la Mesa 1
+    let todosLosProductosHtml = ""; 
+
+    async function cargarDatos() {
+        try {
+            const res = await fetch('/api/estado');
+            datosServidor = await res.json();
+            
+            // Guardamos el menú original completo para los filtros
+            const comboProducto = document.getElementById("producto");
+            if (todosLosProductosHtml === "") {
+                todosLosProductosHtml = comboProducto.innerHTML;
+            }
+
+            // 1. Renderizar Cuadrícula de Mesas (Con Dinero y Nombre del Mesero responsable)
+            const contenedorMesas = document.getElementById("contenedor-mesas");
+            contenedorMesas.innerHTML = "";
+            
+            datosServidor.mesas.forEach(m => {
+                const claseOcupada = m.estado.toLowerCase() === 'ocupada' ? 'ocupada' : '';
+                const claseSeleccionada = m.id === mesaSeleccionadaId ? 'seleccionada' : '';
+                const txtTotal = m.total > 0 ? `<span class="mesa-txt-total">$${m.total}</span>` : '';
+                
+                // Buscar si hay comandas para extraer el nombre de quien la atiende
+                let nombreMeseroAtendiendo = "";
+                if (m.comandas && m.comandas.length > 0) {
+                    nombreMeseroAtendiendo = `<span style="font-size: 10px; font-weight: normal; opacity: 0.85; background: rgba(0,0,0,0.3); padding: 1px 4px; border-radius: 3px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90%;">👤 ${m.comandas[0].mesero}</span>`;
+                }
+                
+                contenedorMesas.innerHTML += `
+                    <div class="mesa-btn ${claseOcupada} ${claseSeleccionada}" onclick="seleccionarMesa(${m.id})">
+                        ${m.nombre}
+                        ${txtTotal}
+                        ${nombreMeseroAtendiendo}
+                    </div>`;
+            });
+
+            // 2. Llenar select de Meseros de forma fluida
+            const selectMesero = document.getElementById("select-mesero");
+            if (selectMesero) {
+                const meseroActualSeleccionado = selectMesero.value; 
+                selectMesero.innerHTML = "";
+                if (datosServidor.meseros && datosServidor.meseros.length > 0) {
+                    datosServidor.meseros.forEach(m => {
+                        selectMesero.innerHTML += `<option value="${m}">${m}</option>`;
+                    });
+                    if (meseroActualSeleccionado && datosServidor.meseros.includes(meseroActualSeleccionado)) {
+                        selectMesero.value = meseroActualSeleccionado;
+                    }
+                }
+            }
+
+            // 3. Pintar los datos y productos de la Mesa Seleccionada
+            const mesa = datosServidor.mesas.find(m => m.id === mesaSeleccionadaId);
+            if (mesa) {
+                document.getElementById("txt-mesa-activa").innerText = `${mesa.nombre} (${mesa.estado})`;
+                
+                const lista = document.getElementById("lista-pedidos");
+                lista.innerHTML = "";
+                
+                mesa.comandas.forEach(c => {
+                    lista.innerHTML += `
+                        <div class="fila-pedido">
+                            <span>• ${c.cantidad}x ${c.producto} <span class="mesero-tag">💁‍♂️ ${c.mesero}</span></span>
+                            <span style="display: flex; align-items: center;">
+                                $${c.precio * c.cantidad}.00
+                                <button class="btn-cancelar" onclick="eliminarProducto(${c.id}, ${mesa.id})">X</button>
+                            </span>
+                        </div>`;
+                    
+                    if(c.notas && c.notas.trim() !== "") {
+                        lista.innerHTML += `<p class="nota-platillo">↳ Nota: "${c.notas}"</p>`;
+                    }
+                });
+
+                document.getElementById("txt-total").innerText = `$${mesa.total}.00`;
+            }
+        } catch (error) {
+            console.error("Error cargando los datos del servidor:", error);
+        }
+    }
+
+    function seleccionarMesa(id) {
+        mesaSeleccionadaId = id;
+        cargarDatos();
+    }
+
+    // Filtrar el menú por categorías de forma dinámica
+    function filtrarMenu(categoria, boton) {
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('activa'));
+        boton.classList.add('activa');
+
+        const combo = document.getElementById("producto");
+        combo.innerHTML = todosLosProductosHtml; 
+
+        if (categoria !== 'todas') {
+            const opciones = Array.from(combo.options);
+            combo.innerHTML = ""; 
+            opciones.forEach(opt => {
+                if (opt.getAttribute("data-cat") === categoria) {
+                    combo.appendChild(opt);
+                }
+            });
+        }
+    }
+
+    async function enviarPedido() {
+        const selectMesero = document.getElementById("select-mesero");
+        if (!selectMesero || selectMesero.value === "") {
+            alert("Por favor, selecciona o agrega un mesero antes de enviar el pedido.");
+            return;
+        }
+
+        const combo = document.getElementById("producto");
+        if(combo.options.length === 0) return;
+
+        const producto = combo.options[combo.selectedIndex].text.split(" - ")[0];
+        const precio = combo.value;
+        const cantidad = document.getElementById("cantidad").value;
+        const notas = document.getElementById("notas").value;
+        const mesero = selectMesero.value;
+
+        await fetch('/api/pedido', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ mesa_id: mesaSeleccionadaId, producto: producto, precio: precio, cantidad: cantidad, notas: notas, mesero: mesero })
+        });
+
+        document.getElementById("cantidad").value = "1";
+        document.getElementById("notas").value = "";
+        cargarDatos();
+    }
+
+    async function eliminarProducto(comandaId, mesaId) {
+        if(confirm("¿Estás seguro de que deseas cancelar este producto?")) {
+            await fetch('/api/cancelar-producto', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ comanda_id: comandaId, mesa_id: mesaId })
+            });
+            cargarDatos();
+        }
+    }
+
+    async function finalizarMesa() {
+        if(confirm("¿Seguro que deseas cobrar y liberar esta mesa?")) {
+            await fetch('/api/liberar', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ mesa_id: mesaSeleccionadaId })
+            });
+            cargarDatos();
+        }
+    }
+
+    async function agregarNuevaMesa() {
+        const res = await fetch('/api/nueva-mesa', { method: 'POST' });
+        const resultado = await res.json();
+        if(resultado.status === "success") {
+            alert(`¡Se ha creado la ${resultado.nombre} con éxito!`);
+            cargarDatos();
+        }
+    }
+
+    async function agregarNuevoMesero() {
+        const nombre = prompt("Escribe el nombre del nuevo mesero:");
+        if (nombre && nombre.trim() !== "") {
+            const res = await fetch('/api/nuevo-mesero', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ nombre: nombre })
+            });
+            const resultado = await res.json();
+            if(resultado.status === "success") {
+                alert(`¡Mesero "${resultado.nombre}" registrado!`);
+                await cargarDatos();
+            }
+        }
+    }
+
+    window.onload = cargarDatos;
+</script>
+</body>
+</html>
